@@ -313,6 +313,8 @@ export class NotebookEditor extends EditorPane implements IFindNotebookControlle
 						this._currentMatch
 					);
 					this._setCurrentFindMatch(findScope);
+					//reset find expression
+					this.notebookFindModel.findExpression = undefined;
 				} else {
 					this.notebookInput.notebookFindModel.clearDecorations();
 					this.notebookFindModel.findExpression = this._findState.searchString;
