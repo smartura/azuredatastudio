@@ -37,7 +37,6 @@ export class DashboardWidget {
 	private _migrationStatusCardLoadingContainer!: azdata.LoadingComponent;
 	private _view!: azdata.ModelView;
 
-
 	private _inProgressMigrationButton!: StatusCard;
 	private _inProgressWarningMigrationButton!: StatusCard;
 	private _successfulMigrationButton!: StatusCard;
@@ -48,6 +47,7 @@ export class DashboardWidget {
 	private _viewAllMigrationsButton!: azdata.ButtonComponent;
 
 	private _autoRefreshHandle!: NodeJS.Timeout;
+	private _disposables: vscode.Disposable[] = [];
 
 	constructor() {
 	}
@@ -94,10 +94,13 @@ export class DashboardWidget {
 					'margin-top': '20px'
 				}
 			});
-			await view.initializeModel(container);
-			this._view.onClosed((e) => {
+			this._disposables.push(this._view.onClosed(e => {
 				clearInterval(this._autoRefreshHandle);
-			});
+				this._disposables.forEach(
+					d => { try { d.dispose(); } catch { } });
+			}));
+
+			await view.initializeModel(container);
 			this.refreshMigrations();
 		});
 	}
@@ -178,15 +181,12 @@ export class DashboardWidget {
 
 		const preRequisiteLearnMoreLink = view.modelBuilder.hyperlink().withProps({
 			label: loc.LEARN_MORE,
-			url: '', //TODO: add link for the pre req document.
+			ariaLabel: loc.LEARN_MORE_ABOUT_PRE_REQS,
+			url: 'https://aka.ms/azuresqlmigrationextension',
 			CSSStyles: {
 				'padding-left': '10px'
 			}
 		}).component();
-
-		preRequisiteLearnMoreLink.onDidClick((value) => {
-			vscode.window.showInformationMessage(loc.COMING_SOON);
-		});
 
 		const preReqContainer = view.modelBuilder.flexContainer().withItems([
 			preRequisiteListTitle,
@@ -233,11 +233,11 @@ export class DashboardWidget {
 				'border': '1px solid'
 			}
 		}).component();
-		buttonContainer.onDidClick(async () => {
+		this._disposables.push(buttonContainer.onDidClick(async () => {
 			if (taskMetaData.command) {
 				await vscode.commands.executeCommand(taskMetaData.command);
 			}
-		});
+		}));
 		return view.modelBuilder.divContainer().withItems([buttonContainer]).component();
 	}
 
@@ -558,10 +558,10 @@ export class DashboardWidget {
 			}
 		}).component();
 
-		this._viewAllMigrationsButton.onDidClick(async (e) => {
+		this._disposables.push(this._viewAllMigrationsButton.onDidClick(async (e) => {
 			const migrationStatus = await this.getCurrentMigrations();
 			new MigrationStatusDialog(migrationStatus ? migrationStatus : await this.getMigrations(), AdsMigrationStatus.ALL).initialize();
-		});
+		}));
 
 		const refreshButton = view.modelBuilder.hyperlink().withProps({
 			label: loc.REFRESH,
@@ -573,11 +573,11 @@ export class DashboardWidget {
 			}
 		}).component();
 
-		refreshButton.onDidClick(async (e) => {
+		this._disposables.push(refreshButton.onDidClick(async (e) => {
 			refreshButton.enabled = false;
 			await this.refreshMigrations();
 			refreshButton.enabled = true;
-		});
+		}));
 
 		const buttonContainer = view.modelBuilder.flexContainer().withLayout({
 			justifyContent: 'flex-end',
@@ -614,10 +614,10 @@ export class DashboardWidget {
 			IconPathHelper.inProgressMigration,
 			loc.MIGRATION_IN_PROGRESS
 		);
-		this._inProgressMigrationButton.container.onDidClick(async (e) => {
+		this._disposables.push(this._inProgressMigrationButton.container.onDidClick(async (e) => {
 			const dialog = new MigrationStatusDialog(await this.getCurrentMigrations(), AdsMigrationStatus.ONGOING);
 			dialog.initialize();
-		});
+		}));
 
 		this._migrationStatusCardsContainer.addItem(
 			this._inProgressMigrationButton.container
@@ -628,10 +628,10 @@ export class DashboardWidget {
 			loc.MIGRATION_IN_PROGRESS,
 			''
 		);
-		this._inProgressWarningMigrationButton.container.onDidClick(async (e) => {
+		this._disposables.push(this._inProgressWarningMigrationButton.container.onDidClick(async (e) => {
 			const dialog = new MigrationStatusDialog(await this.getCurrentMigrations(), AdsMigrationStatus.ONGOING);
 			dialog.initialize();
-		});
+		}));
 
 		this._migrationStatusCardsContainer.addItem(
 			this._inProgressWarningMigrationButton.container
@@ -641,10 +641,10 @@ export class DashboardWidget {
 			IconPathHelper.completedMigration,
 			loc.MIGRATION_COMPLETED
 		);
-		this._successfulMigrationButton.container.onDidClick(async (e) => {
+		this._disposables.push(this._successfulMigrationButton.container.onDidClick(async (e) => {
 			const dialog = new MigrationStatusDialog(await this.getCurrentMigrations(), AdsMigrationStatus.SUCCEEDED);
 			dialog.initialize();
-		});
+		}));
 		this._migrationStatusCardsContainer.addItem(
 			this._successfulMigrationButton.container
 		);
@@ -654,10 +654,10 @@ export class DashboardWidget {
 			IconPathHelper.completingCutover,
 			loc.MIGRATION_CUTOVER_CARD
 		);
-		this._completingMigrationButton.container.onDidClick(async (e) => {
+		this._disposables.push(this._completingMigrationButton.container.onDidClick(async (e) => {
 			const dialog = new MigrationStatusDialog(await this.getCurrentMigrations(), AdsMigrationStatus.COMPLETING);
 			dialog.initialize();
-		});
+		}));
 		this._migrationStatusCardsContainer.addItem(
 			this._completingMigrationButton.container
 		);
@@ -666,10 +666,10 @@ export class DashboardWidget {
 			IconPathHelper.error,
 			loc.MIGRATION_FAILED
 		);
-		this._failedMigrationButton.container.onDidClick(async (e) => {
+		this._disposables.push(this._failedMigrationButton.container.onDidClick(async (e) => {
 			const dialog = new MigrationStatusDialog(await this.getCurrentMigrations(), AdsMigrationStatus.FAILED);
 			dialog.initialize();
-		});
+		}));
 		this._migrationStatusCardsContainer.addItem(
 			this._failedMigrationButton.container
 		);
@@ -678,9 +678,9 @@ export class DashboardWidget {
 			IconPathHelper.notStartedMigration,
 			loc.MIGRATION_NOT_STARTED
 		);
-		this._notStartedMigrationCard.container.onDidClick((e) => {
+		this._disposables.push(this._notStartedMigrationCard.container.onDidClick((e) => {
 			vscode.window.showInformationMessage('Feature coming soon');
-		});
+		}));
 
 		this._migrationStatusCardLoadingContainer = view.modelBuilder.loadingComponent().withItem(this._migrationStatusCardsContainer).component();
 
@@ -843,11 +843,11 @@ export class DashboardWidget {
 				'margin': '0px'
 			}
 		}).component();
-		video1Container.onDidClick(async () => {
+		this._disposables.push(video1Container.onDidClick(async () => {
 			if (linkMetaData.link) {
 				await vscode.env.openExternal(vscode.Uri.parse(linkMetaData.link));
 			}
-		});
+		}));
 		videosContainer.addItem(video1Container, {
 			CSSStyles: {
 				'background-image': `url(${vscode.Uri.file(<string>linkMetaData.iconPath?.light)})`,
