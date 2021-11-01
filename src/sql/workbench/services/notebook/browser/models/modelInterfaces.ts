@@ -552,6 +552,7 @@ export interface ICellModel {
 	addAttachment(mimeType: string, base64Encoding: string, name: string): string;
 	richTextCursorPosition: ICaretPosition;
 	markdownCursorPosition: IPosition;
+	lastEditMode: string | undefined;
 }
 
 export interface ICaretPosition {
