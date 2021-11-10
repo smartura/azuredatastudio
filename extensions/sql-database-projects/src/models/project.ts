@@ -122,7 +122,7 @@ export class Project implements ISqlProject {
 		// check if this is a new msbuild sdk style project
 		this._isMsbuildSdkStyleProject = this.CheckForMsbuildSdkStyleProject();
 
-		await this.loadFilesInProject();
+		await this.getFilesInProject();
 		await this.loadFolders();
 		this.loadPrePostDeployScripts();
 		this.loadDatabaseReferences();
@@ -159,9 +159,10 @@ export class Project implements ISqlProject {
 	/**
 	 * Gets all the files specified by <Build Inlude="..."> and removes all the files specified by <Build Remove="...">
 	 * and all files included by the default glob of the folder of the sqlproj if it's an msbuild sdk style project
+	 * @param loadFiles set to true if project files will be loaded into the project._files, false if just getting the Set of files in the project
 	 * @returns Set of files included in project as specified by the sqlproj
 	 */
-	async loadFilesInProject(): Promise<void> {
+	async getFilesInProject(loadFiles: boolean = true): Promise<Set<string>> {
 		const filesSet: Set<string> = new Set();
 		const entriesWithType: { relativePath: string, typeAttribute: string }[] = [];
 
@@ -235,10 +236,14 @@ export class Project implements ISqlProject {
 		}
 
 		// create a FileProjectEntry for each file
-		filesSet.forEach(f => {
-			const typeEntry = entriesWithType.find(e => e.relativePath === f);
-			this._files.push(this.createFileProjectEntry(f, EntryType.File, typeEntry ? typeEntry.typeAttribute : undefined));
-		});
+		if (loadFiles) {
+			filesSet.forEach(f => {
+				const typeEntry = entriesWithType.find(e => e.relativePath === f);
+				this._files.push(this.createFileProjectEntry(f, EntryType.File, typeEntry ? typeEntry.typeAttribute : undefined));
+			});
+		}
+
+		return filesSet;
 	}
 
 	async loadFolders(): Promise<void> {
@@ -866,10 +871,10 @@ export class Project implements ISqlProject {
 		// if it's still included by a glob
 		if (this.isMsbuildSdkStyleProject) {
 			await this.serializeToProjFile(this.projFileXmlDoc);
-			await this.readProjFile();
+			const currentFiles = await this.getFilesInProject(false);
 
 			// only add a node to exclude the file if it's still included by a glob
-			if (this.files.find(f => f.relativePath === utils.convertSlashesForSqlProj(path))) {
+			if (currentFiles.has(utils.convertSlashesForSqlProj(path))) {
 				const removeFileNode = this.projFileXmlDoc!.createElement(constants.Build);
 				removeFileNode.setAttribute(constants.Remove, utils.convertSlashesForSqlProj(path));
 				this.findOrCreateItemGroup(constants.Build).appendChild(removeFileNode);
@@ -1223,6 +1228,9 @@ export class Project implements ISqlProject {
 		}); // TODO: replace <any>
 
 		await fs.writeFile(this._projectFilePath, xml);
+
+		// update projFileXmlDoc since the file was updated
+		this.projFileXmlDoc = new xmldom.DOMParser().parseFromString(xml);
 	}
 
 	/**
