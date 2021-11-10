@@ -50,9 +50,9 @@ import { IEditorGroupsService } from 'vs/workbench/services/editor/common/editor
 import { IEditorInput, IEditorPane } from 'vs/workbench/common/editor';
 import { isINotebookInput } from 'sql/workbench/services/notebook/browser/interface';
 import { INotebookShowOptions } from 'sql/workbench/api/common/sqlExtHost.protocol';
-import { NotebookLanguage } from 'sql/workbench/common/constants';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
 import { SqlSerializationProvider } from 'sql/workbench/services/notebook/browser/sql/sqlSerializationProvider';
+import { DEFAULT_NOTEBOOK_LANGUAGE } from 'sql/workbench/common/constants';
 
 const languageAssociationRegistry = Registry.as<ILanguageAssociationRegistry>(LanguageAssociationExtensions.LanguageAssociations);
 
@@ -244,8 +244,8 @@ export class NotebookService extends Disposable implements INotebookService {
 				fileInput = this._editorService.createEditorInput({ forceFile: true, resource: uri, mode: 'notebook' });
 			}
 		}
-		// We only need to get the Notebook language association as such we only need to use ipynb
-		const inputCreator = languageAssociationRegistry.getAssociationForLanguage(NotebookLanguage.Ipynb);
+		// We only need to get the Notebook language association, so we only need to use ipynb
+		const inputCreator = languageAssociationRegistry.getAssociationForLanguage(DEFAULT_NOTEBOOK_LANGUAGE);
 		if (inputCreator) {
 			fileInput = await inputCreator.convertInput(fileInput);
 			if (isINotebookInput(fileInput)) {

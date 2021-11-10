@@ -13,7 +13,6 @@ import { FileEditorInput } from 'vs/workbench/contrib/files/browser/editors/file
 import { UntitledTextEditorInput } from 'vs/workbench/services/untitled/common/untitledTextEditorInput';
 import { ILanguageAssociation } from 'sql/workbench/services/languageAssociation/common/languageAssociation';
 import { NotebookInput } from 'sql/workbench/contrib/notebook/browser/models/notebookInput';
-import { NotebookLanguage } from 'sql/workbench/common/constants';
 import { DiffEditorInput } from 'vs/workbench/common/editor/diffEditorInput';
 import { DiffNotebookInput } from 'sql/workbench/contrib/notebook/browser/models/diffNotebookInput';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
@@ -21,12 +20,6 @@ import { IConfigurationService } from 'vs/platform/configuration/common/configur
 const editorInputFactoryRegistry = Registry.as<IEditorInputFactoryRegistry>(EditorExtensions.EditorInputFactories);
 
 export class NotebookEditorInputAssociation implements ILanguageAssociation {
-	/**
-	 * The language IDs that are associated with Notebooks. These are case sensitive for comparing with what's
-	 * registered in the ModeService registry.
-	 */
-	static readonly languages = [NotebookLanguage.Notebook, NotebookLanguage.Ipynb];
-
 	constructor(@IInstantiationService private readonly instantiationService: IInstantiationService, @IConfigurationService private readonly configurationService: IConfigurationService) { }
 
 	convertInput(activeEditor: IEditorInput): NotebookInput | DiffNotebookInput | undefined {
