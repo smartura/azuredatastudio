@@ -378,12 +378,12 @@ export class NotebookService extends Disposable implements INotebookService {
 	}
 
 	private addFileProvider(fileType: string, provider: ProviderDescriptionRegistration) {
-		let providers = this._fileToProviderDescriptions.get(fileType.toUpperCase());
+		let providers = this._fileToProviderDescriptions.get(fileType.toLowerCase());
 		if (!providers) {
 			providers = [];
 		}
 		providers.push(provider);
-		this._fileToProviderDescriptions.set(fileType.toUpperCase(), providers);
+		this._fileToProviderDescriptions.set(fileType.toLowerCase(), providers);
 	}
 
 	// Standard kernels are contributed where a list of kernels are defined that can be shown
@@ -411,7 +411,7 @@ export class NotebookService extends Disposable implements INotebookService {
 	}
 
 	getProvidersForFileType(fileType: string): string[] | undefined {
-		let providers = this._fileToProviderDescriptions.get(fileType.toUpperCase());
+		let providers = this._fileToProviderDescriptions.get(fileType.toLowerCase());
 		return providers?.map(provider => provider.provider);
 	}
 
