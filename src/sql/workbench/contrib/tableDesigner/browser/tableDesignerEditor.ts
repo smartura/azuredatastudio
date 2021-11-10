@@ -17,7 +17,7 @@ import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { EditorPane } from 'vs/workbench/browser/parts/editor/editorPane';
 import { IEditorOpenContext } from 'vs/workbench/common/editor';
 import { IWorkbenchThemeService } from 'vs/workbench/services/themes/common/workbenchThemeService';
-import { SaveTableChangesAction } from 'sql/workbench/contrib/tableDesigner/browser/actions';
+import { SaveTableChangesAction, DiscardTableChangesAction } from 'sql/workbench/contrib/tableDesigner/browser/actions';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { IColorTheme, ICssStyleCollector, registerThemingParticipant } from 'vs/platform/theme/common/themeService';
 import { DesignerPaneSeparator } from 'sql/platform/theme/common/colorRegistry';
@@ -27,6 +27,7 @@ export class TableDesignerEditor extends EditorPane {
 
 	private _designer: Designer;
 	private _saveChangesAction: SaveTableChangesAction;
+	private _discardChangesAction: DiscardTableChangesAction;
 
 	constructor(
 		@ITelemetryService telemetryService: ITelemetryService,
@@ -47,6 +48,7 @@ export class TableDesignerEditor extends EditorPane {
 		const designerInput = input.getComponentInput();
 		this._designer.setInput(designerInput);
 		this._saveChangesAction.setContext(designerInput);
+		this._discardChangesAction.setContext(designerInput);
 	}
 
 	protected createEditor(parent: HTMLElement): void {
@@ -57,8 +59,10 @@ export class TableDesignerEditor extends EditorPane {
 		const actionbar = new ActionBar(actionbarContainer);
 		this._register(actionbar);
 		this._saveChangesAction = this._instantiationService.createInstance(SaveTableChangesAction);
+		this._discardChangesAction = this._instantiationService.createInstance(DiscardTableChangesAction);
 		this._saveChangesAction.enabled = false;
-		actionbar.push(this._saveChangesAction, { icon: true, label: false });
+		this._discardChangesAction.enabled = false;
+		actionbar.push([this._saveChangesAction, this._discardChangesAction], { icon: true, label: false });
 
 		this._designer = new Designer(designerContainer, this._instantiationService, this._contextViewService);
 		this._register(attachDesignerStyler(this._designer, this.themeService));
