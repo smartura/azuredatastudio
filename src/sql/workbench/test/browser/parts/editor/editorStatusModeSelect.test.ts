@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import { setMode } from 'sql/workbench/browser/parts/editor/editorStatusModeSelect';
 import { IDisposable, dispose } from 'vs/base/common/lifecycle';
 import { QueryEditorLanguageAssociation } from 'sql/workbench/contrib/query/browser/queryInputFactory';
+import { NotebookEditorInputAssociation } from 'sql/workbench/contrib/notebook/browser/models/notebookInputFactory';
 import { workbenchInstantiationService } from 'sql/workbench/test/workbenchTestServices';
 import { INotebookService } from 'sql/workbench/services/notebook/browser/notebookService';
 import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
@@ -31,6 +32,7 @@ import { EditorType } from 'vs/editor/common/editorCommon';
 import { INotificationService } from 'vs/platform/notification/common/notification';
 import { TestInstantiationService } from 'vs/platform/instantiation/test/common/instantiationServiceMock';
 import { TestNotificationService } from 'vs/platform/notification/test/common/testNotificationService';
+import { DEFAULT_NOTEBOOK_LANGUAGE } from 'sql/workbench/common/constants';
 
 const languageAssociations = Registry.as<ILanguageAssociationRegistry>(LanguageAssociationExtensions.LanguageAssociations);
 
@@ -44,6 +46,7 @@ suite('set mode', () => {
 
 	setup(() => {
 		disposables.push(languageAssociations.registerLanguageAssociation(QueryEditorLanguageAssociation.languages, QueryEditorLanguageAssociation, QueryEditorLanguageAssociation.isDefault));
+		disposables.push(languageAssociations.registerLanguageAssociation([DEFAULT_NOTEBOOK_LANGUAGE], NotebookEditorInputAssociation));
 		instantiationService = workbenchInstantiationService();
 		instantiationService.stub(INotebookService, new NotebookServiceStub());
 		const editorService = new MockEditorService(instantiationService);
