@@ -52,7 +52,7 @@ import { isINotebookInput } from 'sql/workbench/services/notebook/browser/interf
 import { INotebookShowOptions } from 'sql/workbench/api/common/sqlExtHost.protocol';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
 import { SqlSerializationProvider } from 'sql/workbench/services/notebook/browser/sql/sqlSerializationProvider';
-import { DEFAULT_NOTEBOOK_LANGUAGE } from 'sql/workbench/common/constants';
+import { NOTEBOOK_LANGUAGE } from 'sql/workbench/common/constants';
 
 const languageAssociationRegistry = Registry.as<ILanguageAssociationRegistry>(LanguageAssociationExtensions.LanguageAssociations);
 
@@ -245,7 +245,7 @@ export class NotebookService extends Disposable implements INotebookService {
 			}
 		}
 		// We only need to get the Notebook language association, so we only need to use ipynb
-		const inputCreator = languageAssociationRegistry.getAssociationForLanguage(DEFAULT_NOTEBOOK_LANGUAGE);
+		const inputCreator = languageAssociationRegistry.getAssociationForLanguage(NOTEBOOK_LANGUAGE);
 		if (inputCreator) {
 			fileInput = await inputCreator.convertInput(fileInput);
 			if (isINotebookInput(fileInput)) {

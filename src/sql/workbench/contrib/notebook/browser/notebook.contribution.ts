@@ -62,7 +62,7 @@ import { IModeService } from 'vs/editor/common/services/modeService';
 import { ILogService } from 'vs/platform/log/common/log';
 import { DiffEditorInput } from 'vs/workbench/common/editor/diffEditorInput';
 import { useNewMarkdownRendererKey } from 'sql/workbench/contrib/notebook/common/notebookCommon';
-import { DEFAULT_NOTEBOOK_LANGUAGE, JUPYTER_PROVIDER_ID } from 'sql/workbench/common/constants';
+import { NOTEBOOK_LANGUAGE, JUPYTER_PROVIDER_ID } from 'sql/workbench/common/constants';
 
 Registry.as<IEditorInputFactoryRegistry>(EditorExtensions.EditorInputFactories)
 	.registerEditorInputSerializer(FileNotebookInput.ID, FileNoteBookEditorInputSerializer);
@@ -71,7 +71,7 @@ Registry.as<IEditorInputFactoryRegistry>(EditorExtensions.EditorInputFactories)
 	.registerEditorInputSerializer(UntitledNotebookInput.ID, UntitledNotebookEditorInputSerializer);
 
 Registry.as<ILanguageAssociationRegistry>(LanguageAssociationExtensions.LanguageAssociations)
-	.registerLanguageAssociation([DEFAULT_NOTEBOOK_LANGUAGE], NotebookEditorInputAssociation);
+	.registerLanguageAssociation([NOTEBOOK_LANGUAGE], NotebookEditorInputAssociation);
 
 Registry.as<IEditorRegistry>(EditorExtensions.Editors)
 	.registerEditor(EditorDescriptor.create(NotebookEditor, NotebookEditor.ID, NotebookEditor.LABEL), [new SyncDescriptor(UntitledNotebookInput), new SyncDescriptor(FileNotebookInput)]);
@@ -710,7 +710,7 @@ export class NotebookEditorOverrideContribution extends Disposable implements IW
 
 	private registerEditorOverrides(): void {
 		this._registeredOverrides.clear();
-		const fileExtensions = this._notebookService.getSupportedFileExtensions();
+		const fileExtensions = this._notebookService.getSupportedFileExtensions(); // TODO: file extensions entries need to start with a .
 		if (fileExtensions.length === 0) {
 			return;
 		}
@@ -743,7 +743,7 @@ export class NotebookEditorOverrideContribution extends Disposable implements IW
 	}
 
 	private tryConvertInput(input: IEditorInput): IEditorInput | undefined {
-		const langAssociation = languageAssociationRegistry.getAssociationForLanguage(DEFAULT_NOTEBOOK_LANGUAGE);
+		const langAssociation = languageAssociationRegistry.getAssociationForLanguage(NOTEBOOK_LANGUAGE);
 		const notebookEditorInput = langAssociation?.syncConvertInput?.(input);
 		if (!notebookEditorInput) {
 			this._logService.warn('Unable to create input for overriding editor ', input instanceof DiffEditorInput ? `${input.primary.resource.toString()} <-> ${input.secondary.resource.toString()}` : input.resource.toString());

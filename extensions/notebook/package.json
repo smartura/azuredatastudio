@@ -319,6 +319,18 @@
         "title": "%notebook.command.highlightText%"
       }
     ],
+    "languages": [
+      {
+        "id": "notebook",
+        "extensions": [
+          ".ipynb"
+        ],
+        "aliases": [
+          "Notebook"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
     "menus": {
       "commandPalette": [
         {

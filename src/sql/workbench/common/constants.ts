@@ -37,7 +37,7 @@ export const RESOURCE_VIEWER_TYPEID = 'workbench.editorInput.resourceViewerInput
 
 export const JUPYTER_PROVIDER_ID = 'jupyter';
 
-export const DEFAULT_NOTEBOOK_LANGUAGE = 'ipynb';
+export const NOTEBOOK_LANGUAGE = 'Notebook';
 
 export interface INotebookSearchConfigurationProperties {
 	exclude: glob.IExpression;
