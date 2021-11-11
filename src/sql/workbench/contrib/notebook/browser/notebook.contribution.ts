@@ -710,7 +710,7 @@ export class NotebookEditorOverrideContribution extends Disposable implements IW
 
 	private registerEditorOverrides(): void {
 		this._registeredOverrides.clear();
-		const fileExtensions = this._notebookService.getSupportedFileExtensions(); // TODO: file extensions entries need to start with a .
+		const fileExtensions = this._notebookService.getSupportedFileExtensions(); // TODO: Need to add file extensions to mode registry
 		if (fileExtensions.length === 0) {
 			return;
 		}
