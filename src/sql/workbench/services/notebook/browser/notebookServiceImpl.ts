@@ -52,7 +52,7 @@ import { isINotebookInput } from 'sql/workbench/services/notebook/browser/interf
 import { INotebookShowOptions } from 'sql/workbench/api/common/sqlExtHost.protocol';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
 import { SqlSerializationProvider } from 'sql/workbench/services/notebook/browser/sql/sqlSerializationProvider';
-import { NOTEBOOK_LANGUAGE_ID } from 'sql/workbench/common/constants';
+import { JUPYTER_PROVIDER_ID, NOTEBOOK_LANGUAGE_ID } from 'sql/workbench/common/constants';
 import { ModesRegistry } from 'vs/editor/common/modes/modesRegistry';
 
 const languageAssociationRegistry = Registry.as<ILanguageAssociationRegistry>(LanguageAssociationExtensions.LanguageAssociations);
@@ -320,11 +320,14 @@ export class NotebookService extends Disposable implements INotebookService {
 			for (let fileType of extensions) {
 				this.addFileProvider(fileType, registration);
 			}
-			// Don't have to include previously registered languages, since everything gets merged together in the registry
-			ModesRegistry.registerLanguage({
-				id: NOTEBOOK_LANGUAGE_ID,
-				extensions: extensions
-			});
+			// Don't have to include previously registered languages, since everything gets merged together in the registry.
+			// Skip updating file extensions for built-in providers, since those are already registered.
+			if (p.id !== SQL_NOTEBOOK_PROVIDER && p.id !== JUPYTER_PROVIDER_ID) {
+				ModesRegistry.registerLanguage({
+					id: NOTEBOOK_LANGUAGE_ID,
+					extensions: extensions
+				});
+			}
 		}
 		if (registration.standardKernels?.length > 0) {
 			if (!this._executeProviders.has(p.id)) {
