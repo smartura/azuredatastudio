@@ -689,7 +689,7 @@
     "notebook.providers": [{
       "provider": "jupyter",
       "fileExtensions": [
-        "IPYNB"
+        ".ipynb"
       ],
       "standardKernels": [
         {

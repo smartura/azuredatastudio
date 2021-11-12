@@ -52,7 +52,8 @@ import { isINotebookInput } from 'sql/workbench/services/notebook/browser/interf
 import { INotebookShowOptions } from 'sql/workbench/api/common/sqlExtHost.protocol';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
 import { SqlSerializationProvider } from 'sql/workbench/services/notebook/browser/sql/sqlSerializationProvider';
-import { NOTEBOOK_LANGUAGE } from 'sql/workbench/common/constants';
+import { NOTEBOOK_LANGUAGE_ID } from 'sql/workbench/common/constants';
+import { ModesRegistry } from 'vs/editor/common/modes/modesRegistry';
 
 const languageAssociationRegistry = Registry.as<ILanguageAssociationRegistry>(LanguageAssociationExtensions.LanguageAssociations);
 
@@ -245,7 +246,7 @@ export class NotebookService extends Disposable implements INotebookService {
 			}
 		}
 		// We only need to get the Notebook language association, so we only need to use ipynb
-		const inputCreator = languageAssociationRegistry.getAssociationForLanguage(NOTEBOOK_LANGUAGE);
+		const inputCreator = languageAssociationRegistry.getAssociationForLanguage(NOTEBOOK_LANGUAGE_ID);
 		if (inputCreator) {
 			fileInput = await inputCreator.convertInput(fileInput);
 			if (isINotebookInput(fileInput)) {
@@ -319,6 +320,11 @@ export class NotebookService extends Disposable implements INotebookService {
 			for (let fileType of extensions) {
 				this.addFileProvider(fileType, registration);
 			}
+			// Don't have to include previously registered languages, since everything gets merged together in the registry
+			ModesRegistry.registerLanguage({
+				id: NOTEBOOK_LANGUAGE_ID,
+				extensions: extensions
+			});
 		}
 		if (registration.standardKernels?.length > 0) {
 			if (!this._executeProviders.has(p.id)) {

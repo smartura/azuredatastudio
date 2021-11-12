@@ -32,7 +32,7 @@ import { EditorType } from 'vs/editor/common/editorCommon';
 import { INotificationService } from 'vs/platform/notification/common/notification';
 import { TestInstantiationService } from 'vs/platform/instantiation/test/common/instantiationServiceMock';
 import { TestNotificationService } from 'vs/platform/notification/test/common/testNotificationService';
-import { NOTEBOOK_LANGUAGE } from 'sql/workbench/common/constants';
+import { NOTEBOOK_LANGUAGE_ID } from 'sql/workbench/common/constants';
 
 const languageAssociations = Registry.as<ILanguageAssociationRegistry>(LanguageAssociationExtensions.LanguageAssociations);
 
@@ -46,7 +46,7 @@ suite('set mode', () => {
 
 	setup(() => {
 		disposables.push(languageAssociations.registerLanguageAssociation(QueryEditorLanguageAssociation.languages, QueryEditorLanguageAssociation, QueryEditorLanguageAssociation.isDefault));
-		disposables.push(languageAssociations.registerLanguageAssociation([NOTEBOOK_LANGUAGE], NotebookEditorInputAssociation));
+		disposables.push(languageAssociations.registerLanguageAssociation([NOTEBOOK_LANGUAGE_ID], NotebookEditorInputAssociation));
 		instantiationService = workbenchInstantiationService();
 		instantiationService.stub(INotebookService, new NotebookServiceStub());
 		const editorService = new MockEditorService(instantiationService);
