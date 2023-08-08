@@ -847,7 +847,7 @@ export class DatabaseBackupPage extends MigrationWizardPage {
 			}
 		});
 
-		this.wizard.customButtons[VALIDATE_IR_CUSTOM_BUTTON_INDEX].hidden = !this.migrationStateModel.isIrMigration;
+		this.wizard.customButtons[VALIDATE_IR_CUSTOM_BUTTON_INDEX].hidden = false;
 		await this._updatePageControlsVisibility();
 
 		if (this.migrationStateModel.refreshDatabaseBackupPage) {

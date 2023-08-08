@@ -907,6 +907,18 @@ export function VALIDATE_IR_SQLDB_VALIDATION_RESULT_ERROR(sourceDatabaseName: st
 		error.message);
 }
 
+export function VALIDATE_IR_VALIDATION_RESULT_LABEL_VALID_NETWORK_BACKUP_FOR_DATABASE(databaseName: string): string {
+	return localize(
+		'sql.migration.validate.ir.validation.result.label.valid.network.backup.for.database',
+		"Valid backup in network share for database: '{0}'", databaseName);
+}
+
+export function VALIDATE_IR_VALIDATION_RESULT_LABEL_VALID_BLOB_BACKUP_FOR_DATABASE(blobName: string, databaseName: string): string {
+	return localize(
+		'sql.migration.validate.ir.validation.result.label.valid.blob.backup.for.database',
+		"{0} contains valid backup for '{1}'", blobName, databaseName);
+}
+
 // common strings
 export const WARNING = localize('sql.migration.warning', "Warning");
 export const ERROR = localize('sql.migration.error', "Error");

@@ -9,10 +9,11 @@ import * as constants from '../../constants/strings';
 import { validateIrDatabaseMigrationSettings, validateIrSqlDatabaseMigrationSettings } from '../../api/azure';
 import { MigrationStateModel, NetworkShare, ValidateIrState, ValidationResult } from '../../models/stateMachine';
 import { EOL } from 'os';
+import * as utils from '../../api/utils';
 import { IconPathHelper } from '../../constants/iconPathHelper';
 import { getEncryptConnectionValue, getSourceConnectionProfile, getTrustServerCertificateValue } from '../../api/sqlUtils';
 import { logError, TelemetryViews } from '../../telemetry';
-import { MigrationTargetType } from '../../api/utils';
+import { Blob, MigrationTargetType } from '../../api/utils';
 
 const DialogName = 'ValidateIrDialog';
 
@@ -354,9 +355,12 @@ export class ValidateIrDialog {
 		if (this._model.isSqlDbTarget) {
 			// initialize validation results view for sqldb target
 			await this._initSqlDbIrResults(results);
-		} else {
+		} else if (this._model.isIrMigration) {
 			// initialize validation results view for sqlmi, sqlvm targets
 			await this._initTestIrResults(results);
+		} else {
+			//blob migration
+			await this._initTestBlobResults(results);
 		}
 	}
 
@@ -366,14 +370,47 @@ export class ValidateIrDialog {
 
 		if (this._model.isSqlDbTarget) {
 			await this._validateSqlDbMigration();
+		} else if (this._model.isIrMigration) {
+			await this._validateIrDatabaseMigration();
 		} else {
-			await this._validateDatabaseMigration();
+			await this._validateBlobDatabaseMigration();
 		}
 
 		this._saveResults();
 	}
 
-	private async _validateDatabaseMigration(): Promise<void> {
+	private async _validateBlobDatabaseMigration(): Promise<void> {
+		const databaseCount = this._model._databasesForMigration.length;
+		let testNumber: number = 0;
+
+		const validate = async (testValidBackup: Blob): Promise<boolean> => {
+			if (testValidBackup) {
+
+				let lastBackupNames = await utils.getBlobLastBackupFileNames(
+					this._model._azureAccount,
+					this._model._databaseBackup.subscription,
+					testValidBackup?.storageAccount,
+					testValidBackup?.blobContainer);
+
+				if (lastBackupNames.length > 0) {
+					await this._updateValidateIrResults(testNumber, ValidateIrState.Succeeded);
+				} else {
+					await this._updateValidateIrResults(testNumber, ValidateIrState.Failed);
+				}
+				return true;
+			}
+
+			return false;
+		};
+
+		for (let i = 0; i < databaseCount; i++) {
+			// validate blob backup for database
+			await validate(this._model._databaseBackup.blobs[i]);
+			testNumber++;
+		}
+	}
+
+	private async _validateIrDatabaseMigration(): Promise<void> {
 		const currentConnection = await getSourceConnectionProfile();
 		const sourceServerName = currentConnection?.serverName!;
 		const encryptConnection = getEncryptConnectionValue(currentConnection);
@@ -389,7 +426,14 @@ export class ValidateIrDialog {
 			testIrOnline: boolean,
 			testSourceLocationConnectivity: boolean,
 			testSourceConnectivity: boolean,
-			testBlobConnectivity: boolean): Promise<boolean> => {
+			testBlobConnectivity: boolean,
+			testValidBackup: boolean): Promise<boolean> => {
+
+			if (testValidBackup) {
+				await this._updateValidateIrResults(testNumber, ValidateIrState.Failed);
+				return false;
+			}
+
 			try {
 				await this._updateValidateIrResults(testNumber, ValidateIrState.Running);
 				const response = await validateIrDatabaseMigrationSettings(
@@ -426,7 +470,7 @@ export class ValidateIrDialog {
 		};
 
 		// validate integration runtime (IR) is online
-		if (!await validate(sourceDatabaseName, networkShare, true, false, false, false)) {
+		if (!await validate(sourceDatabaseName, networkShare, true, false, false, false, false)) {
 			this._canceled = true;
 			await this._updateValidateIrResults(testNumber + 1, ValidateIrState.Canceled, [constants.VALIDATE_IR_VALIDATION_CANCELED])
 			return;
@@ -434,7 +478,7 @@ export class ValidateIrDialog {
 		testNumber++;
 
 		// validate blob container connectivity
-		if (!await validate(sourceDatabaseName, networkShare, false, false, false, true)) {
+		if (!await validate(sourceDatabaseName, networkShare, false, false, false, true, false)) {
 			await this._updateValidateIrResults(testNumber + 1, ValidateIrState.Canceled, [constants.VALIDATE_IR_VALIDATION_CANCELED])
 			return;
 		}
@@ -448,14 +492,18 @@ export class ValidateIrDialog {
 				break;
 			}
 			// validate source connectivity
-			await validate(sourceDatabaseName, networkShare, false, false, true, false);
+			await validate(sourceDatabaseName, networkShare, false, false, true, false, false);
 			testNumber++;
 			if (this._canceled) {
 				await this._updateValidateIrResults(testNumber, ValidateIrState.Canceled, [constants.VALIDATE_IR_VALIDATION_CANCELED])
 				break;
 			}
 			// valdiate source location / network share connectivity
-			await validate(sourceDatabaseName, networkShare, false, true, false, false);
+			await validate(sourceDatabaseName, networkShare, false, true, false, false, false);
+
+			// validate backup for database
+			testNumber++;
+			await validate(sourceDatabaseName, networkShare, false, false, false, false, true);
 		}
 	}
 
@@ -565,6 +613,9 @@ export class ValidateIrDialog {
 			this._addValidationResult(
 				constants.VALIDATE_IR_VALIDATION_RESULT_LABEL_NETWORK_SHARE(
 					networkShare.networkShareLocation));
+			this._addValidationResult(
+				constants.VALIDATE_IR_VALIDATION_RESULT_LABEL_VALID_NETWORK_BACKUP_FOR_DATABASE(
+					networkShare.networkShareLocation));
 		}
 
 		if (results && results.length > 0) {
@@ -599,6 +650,34 @@ export class ValidateIrDialog {
 					constants.VALIDATE_IR_VALIDATION_RESULT_LABEL_TARGET_DATABASE(
 						targetDatabaseName));
 			});
+
+		if (results && results.length > 0) {
+			for (let row = 0; row < results.length; row++) {
+				await this._updateValidateIrResults(
+					row,
+					results[row].state,
+					results[row].errors,
+					false);
+			}
+		}
+
+		const data = this._validationResult.map(row => [
+			row[ValidationResultIndex.message],
+			row[ValidationResultIndex.icon],
+			row[ValidationResultIndex.status]]);
+		await this._resultsTable.updateProperty('data', data);
+	}
+
+	private async _initTestBlobResults(results?: ValidationResult[]): Promise<void> {
+		this._validationResult = [];
+
+		for (let i = 0; i < this._model._databasesForMigration.length; i++) {
+			const sourceDatabaseName = this._model._databasesForMigration[i];
+			const blobContainer = this._model._databaseBackup.blobs[i].blobContainer.name;
+
+			this._addValidationResult(
+				constants.VALIDATE_IR_VALIDATION_RESULT_LABEL_VALID_BLOB_BACKUP_FOR_DATABASE(blobContainer, sourceDatabaseName));
+		}
 
 		if (results && results.length > 0) {
 			for (let row = 0; row < results.length; row++) {
