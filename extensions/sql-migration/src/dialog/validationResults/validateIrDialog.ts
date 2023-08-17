@@ -39,6 +39,7 @@ export const ValidationStatusLookup: constants.LookupTable<string | undefined> =
 	[ValidateIrState.Pending]: constants.VALIDATION_STATE_PENDING,
 	[ValidateIrState.Running]: constants.VALIDATION_STATE_RUNNING,
 	[ValidateIrState.Succeeded]: constants.VALIDATION_STATE_SUCCEEDED,
+	[ValidateIrState.Warning]: constants.VALIDATION_STATE_WARNING,
 	default: undefined
 };
 
@@ -395,7 +396,7 @@ export class ValidateIrDialog {
 				if (lastBackupNames.length > 0) {
 					await this._updateValidateIrResults(testNumber, ValidateIrState.Succeeded);
 				} else {
-					await this._updateValidateIrResults(testNumber, ValidateIrState.Failed);
+					await this._updateValidateIrResults(testNumber, ValidateIrState.Warning, [constants.VALID_BACKUPS_NOT_FOUND('', '')]);
 				}
 				return true;
 			}
@@ -430,7 +431,7 @@ export class ValidateIrDialog {
 			testValidBackup: boolean): Promise<boolean> => {
 
 			if (testValidBackup) {
-				await this._updateValidateIrResults(testNumber, ValidateIrState.Failed);
+				await this._updateValidateIrResults(testNumber, ValidateIrState.Warning, [constants.VALID_BACKUPS_NOT_FOUND('databaseName', 'backupLocation')]);
 				return false;
 			}
 
@@ -486,11 +487,13 @@ export class ValidateIrDialog {
 		for (let i = 0; i < databaseCount; i++) {
 			const sourceDatabaseName = this._model._databasesForMigration[i];
 			const networkShare = this._model._databaseBackup.networkShares[i];
+
 			testNumber++;
 			if (this._canceled) {
 				await this._updateValidateIrResults(testNumber, ValidateIrState.Canceled, [constants.VALIDATE_IR_VALIDATION_CANCELED])
 				break;
 			}
+
 			// validate source connectivity
 			await validate(sourceDatabaseName, networkShare, false, false, true, false, false);
 			testNumber++;
@@ -498,6 +501,7 @@ export class ValidateIrDialog {
 				await this._updateValidateIrResults(testNumber, ValidateIrState.Canceled, [constants.VALIDATE_IR_VALIDATION_CANCELED])
 				break;
 			}
+
 			// valdiate source location / network share connectivity
 			await validate(sourceDatabaseName, networkShare, false, true, false, false, false);
 
@@ -760,6 +764,8 @@ export class ValidateIrDialog {
 				return IconPathHelper.inProgressMigration;
 			case ValidateIrState.Succeeded:
 				return IconPathHelper.completedMigration;
+			case ValidateIrState.Warning:
+				return IconPathHelper.warning;
 			case ValidateIrState.Pending:
 			default:
 				return IconPathHelper.notStartedMigration;

@@ -472,6 +472,14 @@ export class DatabaseBackupPage extends MigrationWizardPage {
 				]
 			}).component();
 
+		const backupWarningBox = this._view.modelBuilder.infoBox()
+			.withProps({
+				text: constants.VALID_BACKUPS_WARNING,
+				style: 'warning',
+				width: WIZARD_INPUT_COMPONENT_WIDTH,
+				CSSStyles: { ...styles.BODY_CSS }
+			}).component();
+
 		this._networkShareVmDatabaseAlreadyExistsInfoBox = this._view.modelBuilder.infoBox()
 			.withProps({
 				text: constants.DATABASE_ALREADY_EXISTS_VM_INFO,
@@ -524,7 +532,8 @@ export class DatabaseBackupPage extends MigrationWizardPage {
 			.withLayout({ flexFlow: 'column' })
 			.withItems([
 				this._networkTableContainer,
-				this._blobTableContainer])
+				this._blobTableContainer,
+				backupWarningBox])
 			.withProps({ CSSStyles: { 'display': 'none' } })
 			.component();
 		return container;
@@ -847,7 +856,7 @@ export class DatabaseBackupPage extends MigrationWizardPage {
 			}
 		});
 
-		this.wizard.customButtons[VALIDATE_IR_CUSTOM_BUTTON_INDEX].hidden = false;
+		this.wizard.customButtons[VALIDATE_IR_CUSTOM_BUTTON_INDEX].hidden = !this.migrationStateModel.isIrMigration;
 		await this._updatePageControlsVisibility();
 
 		if (this.migrationStateModel.refreshDatabaseBackupPage) {

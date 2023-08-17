@@ -27,6 +27,7 @@ export enum ValidateIrState {
 	Succeeded = 'Succeeded',
 	Failed = 'Failed',
 	Canceled = 'Canceled',
+	Warning = 'Warning',
 }
 
 export interface ValidationResult {
@@ -342,8 +343,9 @@ export class MigrationStateModel implements Model, vscode.Disposable {
 		const results = this.validationTargetResults ?? [];
 		return results.length > 1
 			&& results.every(r =>
-				r.errors.length === 0 &&
-				r.state === ValidateIrState.Succeeded)
+				(r.errors.length === 0 &&
+					r.state === ValidateIrState.Succeeded) ||
+				r.state === ValidateIrState.Warning)
 	}
 
 	public get migrationTargetServerName(): string {
@@ -522,7 +524,6 @@ export class MigrationStateModel implements Model, vscode.Disposable {
 
 		return this._skuRecommendationResults;
 	}
-
 
 	private async generateSkuRecommendationTelemetry(): Promise<void> {
 		try {
@@ -949,6 +950,10 @@ export class MigrationStateModel implements Model, vscode.Disposable {
 				this._targetSubscription,
 				<SqlManagedInstance>this._targetServerInstance)
 		).map(t => t.name);
+	}
+
+	public async networkShareCheckBackup() {
+		return await this.migrationService.networkShareCheckBackup("", "", "", "");
 	}
 
 	public async startTdeMigration(

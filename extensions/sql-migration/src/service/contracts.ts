@@ -501,6 +501,11 @@ export interface ISqlMigrationService {
 		networkSharePath: string,
 		accessToken: string,
 		reportUpdate: (dbName: string, succeeded: boolean, message: string, statusCode: string) => void): Promise<TdeMigrationResult | undefined>;
+	networkShareCheckBackup(
+		networkSharePath: string,
+		networkShareUserName: string,
+		networkShareDomain: string,
+		networkSharePassword: string): Promise<NetworkShareCheckBackupResult | undefined>;
 }
 
 export interface TdeMigrationRequest {
@@ -538,10 +543,24 @@ export interface TdeMigrationParams {
 	accessToken: string;
 }
 
+export interface NetworkShareCheckBackupParams {
+	networkSharePath: string;
+	networkShareDomain: string;
+	networkShareUserName: string;
+	networkSharePassword: string;
+}
+
+export namespace NetworkShareCheckBackupRequest {
+	export const type = new RequestType<NetworkShareCheckBackupParams, NetworkShareCheckBackupResult, void, void>('migration/networksharecheckbackup');
+}
+
+export interface NetworkShareCheckBackupResult {
+	FileNames: string[];
+}
+
 export namespace TdeMigrateProgressEvent {
 	export const type = new NotificationType<TdeMigrateProgressParams, void>('migration/tdemigrationprogress');
 }
-
 
 export interface TdeMigrateProgressParams {
 	name: string;

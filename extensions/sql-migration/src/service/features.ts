@@ -41,7 +41,8 @@ export class SqlMigrationService extends MigrationExtensionService implements co
 		contracts.MigrateLoginsRequest.type,
 		contracts.EstablishUserMappingRequest.type,
 		contracts.MigrateServerRolesAndSetPermissionsRequest.type,
-		contracts.TdeMigrateRequest.type
+		contracts.TdeMigrateRequest.type,
+		contracts.NetworkShareCheckBackupRequest.type
 	];
 
 	constructor(client: SqlOpsDataClient) {
@@ -60,6 +61,7 @@ export class SqlMigrationService extends MigrationExtensionService implements co
 			}
 			this._reportUpdate(e.name, e.success, e.message, e.statusCode ?? '');
 		});
+
 	}
 
 	protected registerProvider(options: undefined): Disposable {
@@ -315,6 +317,18 @@ export class SqlMigrationService extends MigrationExtensionService implements co
 		}
 
 		return undefined;
+	}
+
+	async networkShareCheckBackup(networkSharePath: string, networkShareUserName: string, networkShareDomain: string, networkSharePassword: string) {
+		let params: contracts.NetworkShareCheckBackupParams = {
+			networkSharePath: networkSharePath,
+			networkShareUserName: networkShareUserName,
+			networkShareDomain: networkShareDomain,
+			networkSharePassword: networkSharePassword,
+		}
+
+		const result = await this._client.sendRequest(contracts.NetworkShareCheckBackupRequest.type, params);
+		return result;
 	}
 }
 

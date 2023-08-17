@@ -616,6 +616,10 @@ export function STORAGE_ACCOUNT_CONNECTIVITY_WARNING(targetServer: string, datab
 			? localize('sql.migration.storageAccount.warning.vm.many', "Target server '{0}' may not be able to access storage account '{1}'. Ensure that the subnet of the target server is whitelisted on the storage account.", targetServer, databases[0])
 			: localize('sql.migration.storageAccount.warning.vm.one', "Target server '{0}' may not be able to access storage accounts '{1}'. Ensure that the subnet of the target server is whitelisted on the storage accounts.", targetServer, databases.join("', '"));
 }
+export const VALID_BACKUPS_WARNING = localize('sql.migration.valid.backups.warning', "User must ensure that valid backups are in the locations specified above. DMS will not create backups of databases. A migration may be started without all backups, however the migration will not succeed until all backups are created by user.");
+export function VALID_BACKUPS_NOT_FOUND(databaseName: string, backupLocation: string): string {
+	return localize('sql.migration.valid.backups.not.found', "A backup for database could not be found.\nMigration may be started, but the migraion will not succeed until backups are created.\nLearn more about creating and uploading backups", databaseName, backupLocation);
+}
 
 export const TARGET_TABLE_NOT_EMPTY = localize('sql.migration.target.table.not.empty', "Target table is not empty.");
 export const TARGET_TABLE_MISSING = localize('sql.migration.target.table.missing', "Target table does not exist");
@@ -797,6 +801,7 @@ export const VALIDATION_STATE_CANCELED = localize('sql.migration.validation.stat
 export const VALIDATION_STATE_PENDING = localize('sql.migration.validation.state.pending', "Pending");
 export const VALIDATION_STATE_RUNNING = localize('sql.migration.validation.state.running', "Running");
 export const VALIDATION_STATE_SUCCEEDED = localize('sql.migration.validation.state.succeeded', "Succeeded");
+export const VALIDATION_STATE_WARNING = localize('sql.migration.validation.state.warning', "Warning");
 export const VALIDATION_STATE_FAILED = localize('sql.migration.validation.state.failed', "Failed");
 
 export const VALIDATE_IR_DONE_BUTTON = localize('sql.migration.validate.ir.done.button', "Done");
